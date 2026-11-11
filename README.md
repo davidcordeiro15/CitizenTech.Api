@@ -2,6 +2,18 @@
 
 Backend em C# utilizado nas entregas de **SOA e C#**. A CitizenTech procura reduzir a dificuldade de **idosos e pessoas com dificuldade em tecnologia** ao usar serviços em páginas web: o assistente propõe uma orientação curta por voz e, quando aplicável, um destaque visual no elemento da página. A pessoa continua responsável por tocar e preencher.
 
+
+## 👥 Integrantes
+
+| RM | Nome |
+|---|---|
+| 557538 | David Cordeiro     |
+| 555619 | Tiago Morais       |
+| 557065 | Vinicius Augusto   |
+| 556892 | Guilherme Lunghini |
+| 99856  | Marchel Augusto    |
+
+
 ## Escopo e responsabilidades
 
 | Componente | Responsabilidade |
