@@ -35,7 +35,7 @@ Versões obtidas dos projetos e do manifesto de ferramentas, não de relatórios
 | .NET / ASP.NET Core | Target `net10.0`, aplicação Web com controllers; requer SDK .NET 10 para desenvolvimento |
 | EF Core / Relational / Design | `10.0.14` |
 | Oracle.EntityFrameworkCore | `10.23.26400` |
-| Banco de destino | **Oracle 19c, confirmado pela equipe**; runtime e factory usam `DatabaseVersion19` |
+| Banco de destino | **Oracle 19c**; runtime e factory usam `DatabaseVersion19` |
 | OpenAPI nativo | `Microsoft.AspNetCore.OpenApi 10.0.14` |
 | Swagger UI | `Swashbuckle.AspNetCore 10.1.0` |
 | Integração Gemini | HTTP `generateContent`, JSON com `responseJsonSchema`; sem SDK Google |
@@ -447,15 +447,6 @@ Serviço planejado: **Azure App Service**. Antes de publicar:
 
 Nenhum recurso Azure foi criado nesta tarefa. URL publicada, estado de publicação e evidências de acesso hospedado: **A preencher**.
 
-## Equipe e informações pendentes
-
-| Integrante | Identificação | Responsabilidade |
-| --- | --- | --- |
-| David (nome confirmado na especificação) | Nome completo / RM: **A preencher** | Backend C#, Gemini, Oracle, migrações e preparação Azure |
-| **A preencher** | Nome / RM: **A preencher** | Aplicativo React Native e módulo Android, voz, acessibilidade, overlay e APK |
-| Ambos | — | Integração do contrato e evidências da jornada no aparelho |
-
-A equipe ainda precisa preencher: URL do repositório mobile, URL publicada (quando houver), aparelho/Android/Chrome, página e cenário de demonstração, evidências reais Oracle/Gemini/app, participantes/resultados efetivamente coletados e links de vídeos. Não há resultados com usuários declarados neste documento.
 
 ## Documentação relacionada
 
