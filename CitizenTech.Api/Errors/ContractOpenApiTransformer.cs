@@ -36,6 +36,43 @@ public sealed class ContractOpenApiTransformer : IOpenApiDocumentTransformer
                 }
             }
         }
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes["AdminKey"] = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.ApiKey, In = ParameterLocation.Header, Name = "X-Admin-Key",
+            Description = "Chave administrativa configurada exclusivamente no ambiente do servidor. Não compartilhar em prints ou commits."
+        };
+        foreach (var (route, adminPath) in document.Paths)
+        {
+            if (!route.StartsWith("/api/v1/admin/", StringComparison.Ordinal) && route != "/api/v1/sessions/{sessionId}/evaluation") continue;
+            if (adminPath.Operations is null) continue;
+            foreach (var operation in adminPath.Operations.Values)
+            {
+                operation.Security = [new OpenApiSecurityRequirement
+                {
+                    [new OpenApiSecuritySchemeReference("AdminKey", document)] = []
+                }];
+                operation.Description = "Requer X-Admin-Key. Erros usam envelope v1 com requestId de correlação gerado pelo servidor. " + (route.EndsWith("/evaluation")
+                    ? "Coleta manual, única por sessão existente; outcome: completed, partially_completed ou not_completed; rating inteiro 1..5 e neededHumanHelp boolean obrigatório. Retorna 201 somente após gravação, sem Location."
+                    : route.EndsWith("/metrics")
+                    ? "Bases distintas: GUIDANCE_RECORDS criados no intervalo e SESSION_EVALUATIONS criadas no intervalo, sem conversões entre populações. Percentuais 0..100, duas casas; denominador zero e média vazia retornam null. Sucesso técnico não comprova conclusão; falhas não persistidas não são contabilizadas."
+                    : "Resumo completo da atividade observada (não duração da tarefa), sem conteúdo pessoal. Paginação page=1, pageSize=20, máximo 100. Listagem seleciona sessões com algum registro no intervalo e filtra o resumo completo; hasEvaluation=false com outcome é inválido.");
+                if (!route.Contains("{sessionId}")) operation.Description += " from/to ISO 8601 com timezone explícito: from inclusivo, to exclusivo; informar ambos ou nenhum (últimos 30 dias UTC). Retorna intervalo efetivo.";
+                if (operation.RequestBody?.Content?.TryGetValue("application/json", out var input) == true)
+                    input.Example = JsonNode.Parse("""{"outcome":"completed","rating":4,"neededHumanHelp":true}""");
+                foreach (var (status, response) in operation.Responses ?? [])
+                {
+                    var description = status switch
+                    {
+                        "400" => "INVALID_REQUEST", "401" => "UNAUTHORIZED",
+                        "404" => "SESSION_NOT_FOUND", "409" => "SESSION_ALREADY_EVALUATED",
+                        "429" => "RATE_LIMITED", "503" => "ADMIN_NOT_CONFIGURED ou PERSISTENCE_UNAVAILABLE", _ => null
+                    };
+                    if (description is not null) response.Description = description;
+                }
+            }
+        }
         return Task.CompletedTask;
     }
 }

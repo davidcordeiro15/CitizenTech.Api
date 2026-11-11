@@ -3,6 +3,12 @@
 # Troque requestId E snapshotId em cada NOVA solicitação (inclusive tentativa manual).
 @requestId = a1111111-1111-4111-8111-111111111111
 @snapshotId = c3333333-3333-4333-8333-333333333333
+@sessionId = b2222222-2222-4222-8222-222222222222
+# Janela explícita UTC: from inclusivo, to exclusivo. Ajuste para a demonstração.
+@from = 2026-11-01T00:00:00Z
+@to = 2026-12-01T00:00:00Z
+# Configure Admin__ApiKey apenas no ambiente PowerShell local e inicie o cliente
+# herdando esse ambiente. Nunca grave a chave aqui, em prints, vídeos ou commits.
 
 ### Health: não depende de Oracle
 GET {{baseUrl}}/api/v1/health
@@ -18,7 +24,7 @@ Accept: application/json
 {
   "contractVersion": "1",
   "requestId": "{{requestId}}",
-  "sessionId": "b2222222-2222-4222-8222-222222222222",
+  "sessionId": "{{sessionId}}",
   "locale": "pt-BR",
   "goal": "Quero agendar a renovação do meu RG",
   "userMessage": null,
@@ -32,6 +38,78 @@ Accept: application/json
     ]
   }
 }
+
+### 1. Avaliação manual após guidance persistido: 201
+# Todos os quatro endpoints administrativos exigem X-Admin-Key.
+# Outcome: completed | partially_completed | not_completed; rating inteiro 1..5.
+# neededHumanHelp é obrigatório. Não enviar source, data, IDs ou texto livre no JSON.
+# source=manual, id e createdAtUtc são definidos pelo servidor.
+# Sessão sem registro: 404 SESSION_NOT_FOUND; repetição: 409 SESSION_ALREADY_EVALUATED.
+# success/action=complete do guidance não comprovam conclusão: avaliar a jornada manualmente.
+POST {{baseUrl}}/api/v1/sessions/{{sessionId}}/evaluation
+X-Admin-Key: {{$processEnv Admin__ApiKey}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "outcome": "completed",
+  "rating": 5,
+  "neededHumanHelp": false
+}
+
+### 2. Lista de sessões: todos os filtros e paginação
+# from/to: ambos ou nenhum (padrão últimos 30 dias UTC); timezone obrigatório.
+# Para offset positivo, use %2B no lugar de +.
+# hasFailures/hasEvaluation: true ou false; omitir significa não filtrar.
+# outcome aceita os mesmos três valores da avaliação; com hasEvaluation=false retorna 400.
+# Seleção por atividade na janela; resumo, hasFailures e avaliação usam histórico total.
+# Ordenação: última atividade decrescente, depois sessionId.
+# page >= 1; pageSize 1..100 (padrões 1/20); totalItems antes da paginação.
+# totalPages=ceil(totalItems/pageSize), zero sem itens.
+# Item: sessionId, firstRecordedAtUtc, lastRecordedAtUtc, totalGuidanceRecords,
+# successfulRecords, failedRecords, hasEvaluation, outcome e rating (null sem avaliação).
+GET {{baseUrl}}/api/v1/admin/sessions?from={{from}}&to={{to}}&page=1&pageSize=20&hasFailures=false&hasEvaluation=true&outcome=completed
+X-Admin-Key: {{$processEnv Admin__ApiKey}}
+Accept: application/json
+
+### 3. Detalhe de sessão e timeline paginada (sem intervalo)
+# session: mesmo resumo da lista; evaluation separado: objeto completo ou null.
+# evaluation: id, sessionId, outcome, rating, neededHumanHelp, source, createdAtUtc.
+# timeline só metadados, data crescente/requestId, com page/pageSize/totalItems/totalPages/items.
+# Página além do fim mantém totais e retorna items vazio.
+GET {{baseUrl}}/api/v1/admin/sessions/{{sessionId}}?page=1&pageSize=20
+X-Admin-Key: {{$processEnv Admin__ApiKey}}
+Accept: application/json
+
+### 4. Métricas: populações distintas, sem taxa de conversão
+# Técnica: registros criados na janela; totalSessions = sessionIds distintos desses registros.
+# Avaliações: criadas na janela, mesmo se guidance estiver fora dela.
+# Técnica: totalGuidanceRecords, successfulRecords, failedRecords.
+# technicalSuccessRate=100*successfulRecords/totalGuidanceRecords.
+# Avaliações: totalEvaluations, completedEvaluations, partiallyCompletedEvaluations,
+# notCompletedEvaluations, neededHumanHelpEvaluations.
+# completionRate=100*completedEvaluations/totalEvaluations.
+# humanHelpRate=100*neededHumanHelpEvaluations/totalEvaluations.
+# errorCodes: [{value,count}] apenas para falhas persistidas com código não nulo.
+# averageRating=soma das notas/totalEvaluations. Denominador zero => null, não zero.
+# Duas casas decimais; percentuais 0..100. Falhas não persistidas não entram nas métricas.
+GET {{baseUrl}}/api/v1/admin/metrics?from={{from}}&to={{to}}
+X-Admin-Key: {{$processEnv Admin__ApiKey}}
+Accept: application/json
+
+# Erros administrativos: envelope contractVersion/requestId/error(code,message).
+# requestId de erro é UUID gerado pelo servidor, não sessionId ou ID enviado pelo cliente.
+# 401 UNAUTHORIZED: chave ausente/incorreta/múltipla; 503 ADMIN_NOT_CONFIGURED: sem segredo.
+# 400 INVALID_REQUEST: entrada inválida; 503 PERSISTENCE_UNAVAILABLE: falha Oracle.
+# 429 RATE_LIMITED: cota admin compartilhada entre os quatro novos endpoints.
+# Tentativas inválidas contam nessa cota, mas não consomem a cota de guidance.
+# Políticas separadas usam RateLimiting:PermitLimit e RateLimiting:WindowSeconds.
+# Migração já gerada: 20261111123553_AddSessionEvaluations; revisar o delta existente
+# Data/Scripts/002_SessionEvaluations.sql desde 20261110134447_InitialGuidanceRecords.
+# Oracle19: rating NUMBER(2), neededHumanHelp NUMBER(1), sem BOOLEAN SQL.
+# Aplicação somente manual/autorizada; não criar nova migração.
+# Conferir via Data/Scripts/FindSessionEvaluation.sql com bind.
+# Exemplos são roteiro manual, não evidência de execução.
 
 ### 400: campos obrigatórios ausentes
 POST {{baseUrl}}/api/v1/guidance

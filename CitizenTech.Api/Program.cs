@@ -27,6 +27,11 @@ builder.Services.AddDbContext<GuidanceDbContext>(options =>
 });
 builder.Services.AddScoped<IGuidanceRecordStore, OracleGuidanceRecordStore>();
 builder.Services.AddScoped<GuidanceService>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<AdminKeyFilter>();
+builder.Services.AddScoped<ISessionEvaluationStore, SessionEvaluationStore>();
+builder.Services.AddScoped<EvaluationService>();
+builder.Services.AddScoped<AdminQueryService>();
 builder.Services.AddGuidanceProviders(builder.Configuration);
 builder.Services.AddRateLimiter(options =>
 {
@@ -36,10 +41,18 @@ builder.Services.AddRateLimiter(options =>
         limiter.Window = TimeSpan.FromSeconds(builder.Configuration.GetValue("RateLimiting:WindowSeconds", 60));
         limiter.QueueLimit = 0;
     });
+    options.AddFixedWindowLimiter("admin", limiter =>
+    {
+        limiter.PermitLimit = builder.Configuration.GetValue("RateLimiting:PermitLimit", 30);
+        limiter.Window = TimeSpan.FromSeconds(builder.Configuration.GetValue("RateLimiting:WindowSeconds", 60));
+        limiter.QueueLimit = 0;
+    });
     options.OnRejected = async (context, token) =>
     {
         context.HttpContext.Response.StatusCode = 429;
-        await context.HttpContext.Response.WriteAsJsonAsync(ErrorResponse.Create("RATE_LIMITED"), token);
+        await context.HttpContext.Response.WriteAsJsonAsync(ErrorResponse.Create("RATE_LIMITED",
+            context.HttpContext.GetEndpoint()?.Metadata.GetMetadata<Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor>()?.ControllerTypeInfo.AsType() == typeof(CitizenTech.Api.Controllers.AdminController)
+                ? context.HttpContext.Items["RequestId"] as Guid? : null), token);
     };
 });
 var app = builder.Build();

@@ -65,6 +65,57 @@ namespace CitizenTech.Api.Data.Migrations
 
                     b.ToTable("GUIDANCE_RECORDS", (string)null);
                 });
+
+            modelBuilder.Entity("CitizenTech.Api.Models.SessionEvaluation", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("VARCHAR2(36)")
+                        .HasColumnName("ID");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATED_AT_UTC");
+
+                    b.Property<bool>("NeededHumanHelp")
+                        .HasColumnType("NUMBER(1)")
+                        .HasColumnName("NEEDED_HUMAN_HELP");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(19)
+                        .IsUnicode(false)
+                        .HasColumnType("VARCHAR2(19)")
+                        .HasColumnName("OUTCOME");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("NUMBER(2)")
+                        .HasColumnName("RATING");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .IsUnicode(false)
+                        .HasColumnType("VARCHAR2(36)")
+                        .HasColumnName("SESSION_ID");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .IsUnicode(false)
+                        .HasColumnType("VARCHAR2(6)")
+                        .HasColumnName("SOURCE");
+
+                    b.HasKey("Id")
+                        .HasName("PK_SESSION_EVALUATIONS");
+
+                    b.HasIndex("SessionId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_SESSION_EVAL_SESSION_ID");
+
+                    b.ToTable("SESSION_EVALUATIONS", (string)null);
+                });
 #pragma warning restore 612, 618
         }
     }

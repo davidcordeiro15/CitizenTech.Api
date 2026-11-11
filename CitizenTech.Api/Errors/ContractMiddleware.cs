@@ -9,6 +9,9 @@ public sealed class ContractMiddleware(RequestDelegate next)
     public async Task InvokeAsync(HttpContext context)
     {
         context.Items["StartedAt"] = Stopwatch.GetTimestamp();
+        if (context.Request.Path.StartsWithSegments("/api/v1/admin") ||
+            context.Request.Path.StartsWithSegments("/api/v1/sessions"))
+            context.Items["RequestId"] = Guid.NewGuid();
         try
         {
             if (HttpMethods.IsPost(context.Request.Method) && context.Request.Path == "/api/v1/guidance")
