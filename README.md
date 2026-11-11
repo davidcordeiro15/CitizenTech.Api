@@ -138,20 +138,29 @@ O manifesto fica diretamente dentro de `CitizenTech.Api`, não em `.config`. Res
 dotnet tool restore --tool-manifest CitizenTech.Api/dotnet-tools.json
 ```
 
-Depois de configurar as variáveis **no mesmo terminal**, entre na pasta da API e inicie usando a porta dos exemplos:
+Os perfis atuais do Visual Studio estão em [launchSettings.json](CitizenTech.Api/Properties/launchSettings.json). Os endereços disponíveis dependem do perfil selecionado:
+
+| Perfil | Endereços locais padrão |
+| --- | --- |
+| `https` (principal nos exemplos) | `https://localhost:7027` e `http://localhost:5200` |
+| `http` | Pode disponibilizar somente `http://localhost:5200`, sem o endereço HTTPS |
+
+Ambos os perfis definem `ASPNETCORE_ENVIRONMENT=Development`. No Visual Studio, selecione o perfil desejado antes de executar. Para herdar as variáveis configuradas no PowerShell, inicie a API **naquele mesmo terminal**, usando o perfil HTTPS:
 
 ```powershell
 Set-Location CitizenTech.Api
-dotnet run --no-launch-profile --urls http://localhost:5075
+dotnet run --launch-profile https
 ```
 
-| Recurso local | Endereço |
-| --- | --- |
-| Health | http://localhost:5075/api/v1/health |
-| Swagger UI, somente Development | http://localhost:5075/swagger |
-| Documento OpenAPI, somente Development | http://localhost:5075/openapi/v1.json |
+Para selecionar somente o perfil HTTP, use `dotnet run --launch-profile http` e ajuste a baseUrl do cliente para `http://localhost:5200`. F5 não herda variáveis definidas no terminal filho; use User Secrets ou configure o ambiente do processo que inicia o Visual Studio.
 
-`--no-launch-profile` evita usar as portas/variáveis dos perfis de execução. O pipeline tem redirecionamento HTTPS; o comando HTTP acima é apenas para desenvolvimento local, sem porta HTTPS definida por esse comando. Não reproduza essa configuração como publicação.
+| Recurso local (perfil HTTPS) | Endereço |
+| --- | --- |
+| Health | https://localhost:7027/api/v1/health |
+| Swagger UI, somente Development | https://localhost:7027/swagger |
+| Documento OpenAPI, somente Development | https://localhost:7027/openapi/v1.json |
+
+Swagger/OpenAPI só são habilitados em **Development**, independentemente da porta. `--no-launch-profile --urls <ENDERECO>` ignora os perfis e força outro endereço; não faz parte do fluxo principal acima. O pipeline tem redirecionamento HTTPS. Se necessário, confie no certificado HTTPS de desenvolvimento com `dotnet dev-certs https --trust`; não desabilite a validação TLS.
 
 **Celular físico:** `localhost` no aparelho aponta para o próprio celular. O acesso ao computador depende do IP local, da interface em que a API escuta e da liberação da porta no firewall/rede. O endereço acima escuta em localhost; para acesso externo local é necessário ajustar explicitamente a escuta e a baseUrl do app. Não desabilite validação TLS para contornar erro de certificado. CORS não resolve bloqueio de rede de aplicativo nativo.
 
@@ -185,7 +194,7 @@ Erros internos tratados podem retornar 500. Chave administrativa ausente, errada
 
 ### Orientação: requisição completa
 
-Exemplo fictício para `POST http://localhost:5075/api/v1/guidance`, com `Content-Type: application/json`:
+Exemplo fictício para `POST https://localhost:7027/api/v1/guidance`, com `Content-Type: application/json`:
 
 ```json
 {
@@ -235,7 +244,7 @@ Use **novos requestId e snapshotId em toda nova solicitação**, inclusive tenta
 Exemplos para clientes compatíveis com arquivos `.http`/REST Client; `{{$processEnv Admin__ApiKey}}` referencia o ambiente do processo cliente, não uma chave literal. Reinicie o cliente a partir do ambiente configurado se necessário. No Swagger Development, use **Authorize** para informar X-Admin-Key somente nas operações protegidas.
 
 ```http
-@baseUrl = http://localhost:5075
+@baseUrl = https://localhost:7027
 @sessionId = b2222222-2222-4222-8222-222222222222
 
 ### Após um guidance persistido para a sessão

@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:5075
+@baseUrl = https://citizentech-api-gs-ggdkfmgyeedxbtek.eastus2-01.azurewebsites.net
 # Ajuste a porta conforme Properties/launchSettings.json ou use --urls.
 # Troque requestId E snapshotId em cada NOVA solicitação (inclusive tentativa manual).
 @requestId = a1111111-1111-4111-8111-111111111111
@@ -7,6 +7,7 @@
 # Janela explícita UTC: from inclusivo, to exclusivo. Ajuste para a demonstração.
 @from = 2026-11-01T00:00:00Z
 @to = 2026-12-01T00:00:00Z
+
 # Configure Admin__ApiKey apenas no ambiente PowerShell local e inicie o cliente
 # herdando esse ambiente. Nunca grave a chave aqui, em prints, vídeos ou commits.
 

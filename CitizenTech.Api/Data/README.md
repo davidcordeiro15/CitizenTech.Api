@@ -2,6 +2,16 @@
 
 Consulte o **[README principal](../../README.md)** para configuração externa, preparação de banco novo, atualização do banco que já tem a migração inicial, indicadores e limites das evidências. O [guia técnico da API](../README.md) descreve a orquestração. Não execute EF e scripts indiscriminadamente sobre o mesmo histórico.
 
+## Execução local pelos perfis do Visual Studio
+
+Os perfis em [launchSettings.json](../Properties/launchSettings.json) definem HTTPS **`https://localhost:7027`** e HTTP `http://localhost:5200`. O perfil `https` disponibiliza ambos; o perfil `http` pode disponibilizar somente HTTP. Os exemplos adotam HTTPS como principal:
+
+- Health: https://localhost:7027/api/v1/health
+- Swagger: https://localhost:7027/swagger
+- OpenAPI: https://localhost:7027/openapi/v1.json
+
+Swagger/OpenAPI só estão habilitados em **Development**, ambiente definido nos dois perfis atuais. Para herdar as variáveis do PowerShell, inicie a API no mesmo terminal, na pasta `CitizenTech.Api`, com `dotnet run --launch-profile https`. F5 não herda variáveis definidas no terminal filho; use User Secrets ou configure o ambiente do processo que inicia o Visual Studio. Não desabilite validação TLS. Consulte o README principal para configuração e certificado de desenvolvimento.
+
 ## Modelo e garantias
 
 | Entidade / tabela | Garantias |

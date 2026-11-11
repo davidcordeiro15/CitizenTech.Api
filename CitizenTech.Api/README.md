@@ -1,5 +1,15 @@
 # CitizenTech.Api — guia técnico interno
 
+## 👥 Integrantes
+
+| RM | Nome |
+|---|---|
+| 557538 | David Cordeiro |
+| 555619 | Tiago Morais |
+| 557065 | Vinicius Augusto |
+| 556892 | Guilherme Lunghini |
+| 99856 | Marchel Augusto |
+
 A documentação principal do repositório está no **[README da raiz](../README.md)**: apresentação, versões verificadas, variáveis de ambiente, exemplos dos seis endpoints, migrações, indicadores, testes, equipe e preparação Azure. Use-a como referência operacional; este arquivo concentra detalhes úteis da implementação, sem substituir o contrato.
 
 O [contrato mobile original, revisão 1.1](Especificacao_App_CitizenTech_MVP.md) permanece inalterado. A avaliação e as consultas administrativas são uma expansão separada; health e guidance não dependem de X-Admin-Key.
@@ -10,10 +20,20 @@ Configure os valores externos conforme a seção de variáveis do README princip
 
 ```powershell
 dotnet tool restore --tool-manifest dotnet-tools.json
-dotnet run --no-launch-profile --urls http://localhost:5075
+dotnet run --launch-profile https
 ```
 
-Swagger `/swagger` e OpenAPI `/openapi/v1.json` só são mapeados em Development. Health: `/api/v1/health`. Os perfis de execução podem usar outras portas; o comando acima é o utilizado pelos [exemplos HTTP](CitizenTech.Api.http).
+Os padrões dos perfis atuais do Visual Studio, definidos em [Properties/launchSettings.json](Properties/launchSettings.json), são **HTTPS `https://localhost:7027`** e HTTP `http://localhost:5200`. O perfil `https`, usado pelo comando e pelos [exemplos HTTP](CitizenTech.Api.http), disponibiliza ambos. O perfil `http` pode disponibilizar somente HTTP; para usá-lo no terminal, execute `dotnet run --launch-profile http` e ajuste a baseUrl para `http://localhost:5200`.
+
+Endereços principais com o perfil HTTPS:
+
+- Health: https://localhost:7027/api/v1/health
+- Swagger: https://localhost:7027/swagger
+- OpenAPI: https://localhost:7027/openapi/v1.json
+
+Swagger/OpenAPI só são mapeados em **Development**; ambos os perfis atuais definem esse ambiente. Os endereços disponíveis dependem do perfil selecionado no Visual Studio. Usar `--no-launch-profile --urls <ENDERECO>` ignora esses padrões e força um endereço alternativo, fora do fluxo principal.
+
+Para herdar variáveis do PowerShell, inicie a API naquele mesmo terminal. F5 não herda valores definidos no terminal filho; use User Secrets ou configure o ambiente do processo que inicia o Visual Studio. Se necessário, confie no certificado local com `dotnet dev-certs https --trust`; não desabilite validação TLS.
 
 Para compilar/testar toda a solução a partir desta pasta:
 
