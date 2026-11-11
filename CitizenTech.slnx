@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="CitizenTech.Api.Tests/CitizenTech.Api.Tests.csproj" />
+  <Project Path="CitizenTech.Api/CitizenTech.Api.csproj" />
+</Solution>

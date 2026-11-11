@@ -1,0 +1,15 @@
+# Visual Studio / .NET
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+TestResults/
+*.trx
+# Nunca versionar segredos ou configurações locais sensíveis
+.env
+.env.*
+appsettings.Local.json
+.env
+.env.*
+!.env.example
