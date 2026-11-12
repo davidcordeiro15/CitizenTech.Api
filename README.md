@@ -22,7 +22,7 @@ Backend em C# utilizado nas entregas de **SOA e C#**. A CitizenTech procura redu
 | Esta API | Receber elementos e contexto limitado, gerar orientação por Fake ou Gemini, validar a decisão e registrar metadados no Oracle antes de responder sucesso. |
 | Recursos administrativos desta API | Registrar avaliação humana manual, consultar sessões e acompanhar indicadores, mediante chave administrativa. |
 
-**A API não lê diretamente o celular, não desenha overlays, não executa cliques e não confirma agendamentos pelo cidadão.** O aplicativo não está neste repositório. Não há, nesta revisão documental, evidência verificada de integração com o app, implantação Azure ou resultados com participantes.
+**A API não lê diretamente o celular, não desenha overlays, não executa cliques e não confirma agendamentos pelo cidadão.** 
 
 O contrato mobile é a [especificação v1, revisão 1.1 de 07/11/2026](CitizenTech.Api/Especificacao_App_CitizenTech_MVP.md). A expansão administrativa é separada e não altera os dois endpoints originais. Não há frontend administrativo, login, usuários ou perfis.
 
@@ -442,19 +442,46 @@ Caminhos de implementação abaixo são relativos a `CitizenTech.Api/`; testes e
 | C#: async/await e CancellationToken | Controllers, serviços, stores e provider | GuidanceServiceTests, GeminiGuidanceProviderTests, AdminTests |
 | C#: tratamento de erros | `Errors/ContractMiddleware.cs`, `Contracts/Responses.cs` | AdminHttpTests e testes de serviços |
 
-## Preparação para Azure (sem deploy nesta revisão)
+## Hospedagem na Azure
 
-Serviço planejado: **Azure App Service**. Antes de publicar:
+A API está publicada no **Azure App Service**, com runtime **.NET 10**, sistema operacional **Windows** e implantação contínua pelo **GitHub Actions**, a partir da branch `main`.
 
-- Verificar suporte ao runtime **.NET 10** na plataforma escolhida e definir processo de publicação compatível.
-- Configurar novamente conexão, provedor, modelo e chaves no ambiente Azure. Variáveis do computador e User Secrets **não são enviados automaticamente**.
-- Usar **Production** e HTTPS. Swagger/OpenAPI só são mapeados em Development no código atual; **não usar Development em produção apenas para expor documentação**. Este README e a especificação permanecem disponíveis no repositório.
-- Selecionar Gemini explicitamente se a demonstração exigir IA real; o padrão versionado é Fake.
-- Validar conectividade/permissões Oracle e acesso/quota Gemini **a partir da Azure**. Health sozinho não comprova essas dependências.
-- Planejar aplicação manual revisada das migrações e lembrar que os contadores de rate limiting são locais à instância, não distribuídos.
-- Manter segredos fora do Git, dos perfis de publicação e de evidências. Não anexar credenciais em chamados ou vídeos.
+**URL pública:**
+https://citizentech-api-gs-ggdkfmgyeedxbtek.eastus2-01.azurewebsites.net
 
-Nenhum recurso Azure foi criado nesta tarefa. URL publicada, estado de publicação e evidências de acesso hospedado: **A preencher**.
+**Health:**
+https://citizentech-api-gs-ggdkfmgyeedxbtek.eastus2-01.azurewebsites.net/api/v1/health
+
+O endpoint de health foi verificado e respondeu HTTP 200:
+
+    {"status":"ok","contractVersion":"1"}
+
+### Configuração do ambiente
+
+As configurações são fornecidas pelas variáveis de ambiente do App Service:
+
+| Variável | Finalidade |
+| --- | --- |
+| `ConnectionStrings__Oracle` | Conexão com o Oracle da faculdade |
+| `Guidance__Provider` | Seleção do provedor; `Gemini` para IA real |
+| `Gemini__ApiKey` | Chave de acesso ao Gemini |
+| `Gemini__Model` | Identificador do modelo utilizado |
+| `Admin__ApiKey` | Chave dos endpoints administrativos |
+| `ASPNETCORE_ENVIRONMENT` | `Production` |
+
+Variáveis locais e User Secrets não são enviados automaticamente à Azure. Credenciais devem permanecer fora do Git, dos perfis de publicação, de prints e de vídeos.
+
+### Operação e validação
+
+- O acesso público utiliza **HTTPS**, sem as portas usadas no desenvolvimento local.
+- Swagger/OpenAPI estão habilitados somente em `Development` no código atual; sua ausência na URL pública é esperada.
+- O Oracle permanece hospedado na faculdade. A publicação da API não cria outro banco nem aplica migrações automaticamente.
+- O provedor deve ser selecionado explicitamente como `Gemini`, pois o padrão versionado é `Fake`.
+- Os contadores de rate limiting são locais à instância e reiniciam com a aplicação; não são distribuídos.
+
+**Validação concluída:** disponibilidade da aplicação pelo health.
+
+**Validações pendentes de evidência:** orientação com Gemini e gravação Oracle a partir da Azure, avaliação manual e consultas administrativas. O health não verifica banco de dados, credenciais, quota ou disponibilidade do Gemini.
 
 
 ## Documentação relacionada
